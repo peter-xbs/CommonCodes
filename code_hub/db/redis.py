@@ -3,7 +3,7 @@
 """
 @Time: 2022/11/11 3:03 下午
 @Author: jingcao
-@Email: xinbao.sxb@alibaba-inc.com
+@Email: xinbao.sun@hotmail.com
 """
 """
 使用redis做缓存，这里模拟一个web接口缓存的例子, todo 待进一步实践

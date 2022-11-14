@@ -3,7 +3,7 @@
 """
 @Time: 2022/3/24 8:24 下午
 @Author: jingcao
-@Email: xinbao.sxb@alibaba-inc.com
+@Email: xinbao.sun@hotmail.com
 """
 import copy
 import requests

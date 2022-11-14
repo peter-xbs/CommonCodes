@@ -3,7 +3,7 @@
 """
 @Time: 2022/3/19 6:43 下午
 @Author: jingcao
-@Email: xinbao.sxb@alibaba-inc.com
+@Email: xinbao.sun@hotmail.com
 """
 color_schema = {
     "red": ["Salmon", "LightSalmon", "Crimson", "Red", "FireBrick"],

@@ -3,7 +3,7 @@
 """
 @Time: 2022/5/5 9:29 下午
 @Author: jingcao
-@Email: xinbao.sxb@alibaba-inc.com
+@Email: xinbao.sun@hotmail.com
 写入数据库的若干方法
 """
 import os
