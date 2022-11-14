@@ -3,7 +3,7 @@
 """
 @Time: 2022/11/10 9:45 下午
 @Author: jingcao
-@Email: xinbao.sxb@alibaba-inc.com
+@Email: xinbao.sun@hotmail.com
 使用多种Pooling的目的是增加BERT模型的多样性，考虑在模型集成中使用。
 """
 import torch

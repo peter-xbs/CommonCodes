@@ -3,7 +3,7 @@
 """
 @Time: 2022/11/9 11:55 上午
 @Author: jingcao
-@Email: xinbao.sxb@alibaba-inc.com
+@Email: xinbao.sun@hotmail.com
 """
 
 import torch

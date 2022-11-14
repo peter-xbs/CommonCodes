@@ -3,7 +3,7 @@
 """
 @Time: 2022/3/24 9:27 上午
 @Author: jingcao
-@Email: xinbao.sxb@alibaba-inc.com
+@Email: xinbao.sun@hotmail.com
 code: https://github.com/shuxinyin/NLP-Loss-Pytorch/tree/master/unbalanced_loss
 ref: https://mp.weixin.qq.com/s?src=11&timestamp=1648215069&ver=3698&signature=UuS45m84cZ-ixLRPKinIU-75vuiYFKpcRafdoQZoJNQ6kOznOTsafzLgOAXzo0K0wIzzT9d41YbnVytfBcqKsgky-*jm4pg2Cqkttae5LGLfS4duHxYccCFbwhNrLEQK&new=1
 """

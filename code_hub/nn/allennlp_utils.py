@@ -3,7 +3,7 @@
 """
 @Time: 2022/11/4 10:44 上午
 @Author: jingcao
-@Email: xinbao.sxb@alibaba-inc.com
+@Email: xinbao.sun@hotmail.com
 Assorted utilities for working with neural networks in AllenNLP.
 
 """
