@@ -37,157 +37,74 @@ def concept_mining(name_kg):
 
     return concept_id_dict
 
-def _single_pass(cls, iterator, threshold=0.6):
-    import numpy as np
-    def getMaxSimilarity(dictTopic, template):
-        maxValue = 0
-        maxIndex = -1
-        for k, cluster in dictTopic.items():
-            oneSimilarity = np.mean([cls._jaccard_sim(template, vector) for vector in cluster])
-            if oneSimilarity > maxValue:
-                maxValue = oneSimilarity
-                maxIndex = k
-        return maxIndex, maxValue
+class Accumulator:  # @save
+    """在`n`个变量上累加。"""
 
-    dictTopic = {}
-    topic2idx = {}  # 存储template2content 的索引
-    numTopic = 0
-    cnt = 0
-    for idx, template in enumerate(iterator):
-        template_str = str(template)
-        if numTopic == 0:
-            dictTopic[numTopic] = []
-            dictTopic[numTopic].append(template)
+    def __init__(self, n):
+        self.data = [0.0] * n
 
-            topic2idx[numTopic] = {}
-            topic2idx[numTopic][template_str] = []
-            topic2idx[numTopic][template_str].append(idx)
-            numTopic += 1
-        else:
-            maxIndex, maxValue = getMaxSimilarity(dictTopic, template)
-            # join the most similar topic
-            if maxValue > threshold:
-                dictTopic[maxIndex].append(template)
-                if template_str not in topic2idx[maxIndex]:
-                    topic2idx[maxIndex][template_str] = []
-                topic2idx[maxIndex][template_str].append(idx)
-            # else create the new topic
-            else:
-                dictTopic[numTopic] = []
-                dictTopic[numTopic].append(template)
+    def add(self, *args):
+        self.data = [a + float(b) for a, b in zip(self.data, args)]
 
-                topic2idx[numTopic] = {}
-                topic2idx[numTopic][template_str] = []
-                topic2idx[numTopic][template_str].append(idx)
-                numTopic += 1
-        cnt += 1
-        if cnt % 1000 == 0:
-            print("processing {}".format(cnt))
-    return dictTopic, topic2idx
+    def reset(self):
+        self.data = [0.0] * len(self.data)
 
+    def __getitem__(self, idx):
+        return self.data[idx]
 
-def _single_pass2(iterator, threshold):
-    from gensim.similarities import MatrixSimilarity
-    from gensim.corpora import Dictionary
-    # from gensim.models import TfidfModel
-    texts = iterator
-    dictionary = Dictionary(texts)
+class LshTraditional(object):
+    @classmethod
+    def build_shingles(cls, sentence: str, k: int):
+        shingles = []
+        for i in range(len(sentence) - k):
+            shingles.append(sentence[i:i + k])
+        return set(shingles)
 
-    corpus = [dictionary.doc2bow(text) for text in texts]
-    # tfidf = TfidfModel(corpus)
+    @classmethod
+    def build_vocab(cls, shingle_sets: list):
+        # convert list of shingle sets into single set
+        full_set = {item for set_ in shingle_sets for item in set_}
+        vocab = {}
+        for i, shingle in enumerate(list(full_set)):
+            vocab[shingle] = i
+        return vocab
 
-    # corpus_tfidf = tfidf[corpus] #该行注释掉后，表明仅用词频
+    @classmethod
+    def one_hot(cls, shingles: set, vocab: dict):
+        vec = np.zeros(len(vocab))
+        for shingle in shingles:
+            idx = vocab[shingle]
+            vec[idx] = 1
+        return vec
 
-    # index = MatrixSimilarity(corpus_tfidf)
-    # cos_similarity = [list(index[vector]) for vector in corpus_tfidf]
-    index = MatrixSimilarity(corpus)
-    cos_similarity = [list(index[vector]) for vector in corpus]
-    processed = [(0, 0)]
-    cluster_map = {0: [0]}  # 存储文本簇
-    cluster_id = 1
-    for i in range(1, len(cos_similarity)):
-        cos_list = cos_similarity[i][0:i]
-        max_similarity = max(cos_list)
-        if max_similarity > threshold:
-            max_similarity_index = cos_list.index(max_similarity)
-            related_cluter_id = processed[max_similarity_index][1]
-            processed.append((i, related_cluter_id))
-            cluster_map[related_cluter_id].append(i)
-        else:
-            processed.append((i, cluster_id))
-            cluster_map[cluster_id] = [i]
-            cluster_id += 1
+    @classmethod
+    def make_k_shingles(cls, sentences):
+        k = 8  # shingle size
 
-        return cluster_map
+        # build shingles
+        shingles = []
+        for sentence in sentences:
+            shingles.append(cls.build_shingles(sentence, k))
 
-        class Accumulator:  # @save
-            """在`n`个变量上累加。"""
+        # build vocab
+        vocab = cls.build_vocab(shingles)
 
-            def __init__(self, n):
-                self.data = [0.0] * n
+        # one-hot encode our shingles
+        shingles_1hot = []
+        for shingle_set in shingles:
+            shingles_1hot.append(cls.one_hot(shingle_set, vocab))
+        # stack into single numpy array
+        shingles_1hot = np.stack(shingles_1hot)
+        return shingles_1hot, vocab
 
-            def add(self, *args):
-                self.data = [a + float(b) for a, b in zip(self.data, args)]
-
-            def reset(self):
-                self.data = [0.0] * len(self.data)
-
-            def __getitem__(self, idx):
-                return self.data[idx]
-
-        class LshTraditional(object):
-            @classmethod
-            def build_shingles(cls, sentence: str, k: int):
-                shingles = []
-                for i in range(len(sentence) - k):
-                    shingles.append(sentence[i:i + k])
-                return set(shingles)
-
-            @classmethod
-            def build_vocab(cls, shingle_sets: list):
-                # convert list of shingle sets into single set
-                full_set = {item for set_ in shingle_sets for item in set_}
-                vocab = {}
-                for i, shingle in enumerate(list(full_set)):
-                    vocab[shingle] = i
-                return vocab
-
-            @classmethod
-            def one_hot(cls, shingles: set, vocab: dict):
-                vec = np.zeros(len(vocab))
-                for shingle in shingles:
-                    idx = vocab[shingle]
-                    vec[idx] = 1
-                return vec
-
-            @classmethod
-            def make_k_shingles(cls, sentences):
-                k = 8  # shingle size
-
-                # build shingles
-                shingles = []
-                for sentence in sentences:
-                    shingles.append(cls.build_shingles(sentence, k))
-
-                # build vocab
-                vocab = cls.build_vocab(shingles)
-
-                # one-hot encode our shingles
-                shingles_1hot = []
-                for shingle_set in shingles:
-                    shingles_1hot.append(cls.one_hot(shingle_set, vocab))
-                # stack into single numpy array
-                shingles_1hot = np.stack(shingles_1hot)
-                return shingles_1hot, vocab
-
-            @classmethod
-            def minhash_funcs_arr(cls, vocab: dict, resolution: int):
-                length = len(vocab.keys())
-                arr = np.zeros((resolution, length))
-                for i in range(resolution):
-                    permutation = np.random.permutation(len(vocab)) + 1
-                    arr[i, :] = permutation.copy()
-                return arr.astype(int)
+    @classmethod
+    def minhash_funcs_arr(cls, vocab: dict, resolution: int):
+        length = len(vocab.keys())
+        arr = np.zeros((resolution, length))
+        for i in range(resolution):
+            permutation = np.random.permutation(len(vocab)) + 1
+            arr[i, :] = permutation.copy()
+        return arr.astype(int)
 
     @classmethod
     def get_signature(cls, minhash_funcs, vector):
