@@ -16,9 +16,10 @@ class Dataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.data)
+
 def encode_texts(texts):
     all_vecs = []
-    # 加载模型
+    # 加载模型二郎神模型经过SimCSE优化后效果较好
     from transformers import AutoTokenizer, AutoModelForMaskedLM
 
     model = AutoModelForMaskedLM.from_pretrained('/root/model/IDEA-CCNL/Erlangshen-SimCSE-110M-Chinese')

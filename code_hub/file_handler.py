@@ -88,37 +88,6 @@ def dirlist(path, allfile, suffix=None, prefix=None):
             if suffix_fit and prefix_fit:
                 allfile.append(filepath)
 
-def copy_file(src_file, dst_file):
-    """此函数的功以实现复制文件
-    src_file : 源文件名
-    dst_file : 目标文件名
-    """
-    try:
-        fr = open(src_file, "rb")  # fr读文件
-        try:
-            try:
-                fw = open(dst_file, 'wb')  # fw写文件
-                try:
-                    while True:
-                        data = fr.read(4096)
-                        if not data:
-                            break
-                        fw.write(data)
-                except:
-                    print("可能U盘被拔出...")
-                finally:
-                    fw.close()  # 关闭写文件
-            except OSError:
-                print("打开写文件失败")
-                return False
-        finally:
-            fr.close()  # 关闭读文件
-    except OSError:
-        print("打开读文件失败")
-        return False
-    return True
-
-
 def read_json_list(file_path):
     from tqdm import tqdm
 
@@ -213,3 +182,24 @@ def merge_pdf_files(files, tgt_pdf):
 
     merger.write(tgt_pdf)
 
+def read_file(file_path, encoding=None):
+    """
+    读取文件,可解决编码错误问题
+    Args:
+        file_path:
+
+    Returns:
+    """
+    import chardet
+    def _detect_encoding(file_path):
+        with open(file_path, 'rb') as f:
+            s = f.read()
+            res = chardet.detect(s)
+            encoding = res.get('encoding')
+            print(encoding)
+            return encoding
+    if encoding is None:
+        encoding = _detect_encoding(file_path)
+    with open(file_path, encoding=encoding, errors='ignore') as f:
+        inp = f.read()
+        return inp

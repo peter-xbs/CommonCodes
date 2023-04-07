@@ -68,3 +68,47 @@ def google_translation(queries, dest="zh-CN"):
         k, v = trans_res.origin, trans_res.text
         dic[k] = v
     return dic
+
+def download_huggingface_dataset(dataset_name, private=False):
+    """
+    许多用法可参考https://blog.csdn.net/qq_56591814/article/details/120653752
+    """
+    from datasets import load_dataset
+    if private == True:
+        dataset_dict = load_dataset(
+            dataset_name, # huggingface上对应的name
+            use_auth_token='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')
+    else:
+        dataset_dict = load_dataset(
+            dataset_name
+        )
+    # 从dataset_dict中获取train/test等具体dataset
+    dataset = dataset_dict['train'] # 此时Object为Dataset类型
+    # dataset.to_csv('保存本地') # 类似to_json(), to_parquet()
+    # 对应load_dataset('parquet', data_files={'train': 'xx.parquet'})
+    # 或者遍历筛选
+    # 或者整体保存至disk dataset.save_to_disc('xx.dataset')
+    # 加载 dataset = load_from_disk('xx.dataset')
+    # 使用时具体可参考文档
+
+def language_classify(text):
+    """
+    检测文本语言归属
+    """
+    # !pip install langid
+    import langid
+    return langid.classify(text)
+
+def encoding_detect(inp):
+    """
+    检测文件编码
+    """
+    import chardet
+    with open(inp, 'rb') as f:
+        s = f.read()
+        res = chardet.detect(s)
+        encoding = res.get('encoding')
+        return encoding
+
+if __name__ == '__main__':
+    pass

@@ -7,7 +7,7 @@
 
 def lda_analysis(txts, topics, words, parallel=True, use_tfidf=True):
     """
-    txts: 文本列表
+    txts: 文本列表【分词后结果】
     topics: 聚类主题数量
     parallel: 并行化
     use_tfidf: 是否使用tfidf执行分析
