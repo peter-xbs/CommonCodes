@@ -127,5 +127,24 @@ def test_chatgpt_response():
     rsp = json.dumps(rsp, ensure_ascii=False)
     print(rsp)
 
+def test_moderations():
+    import requests
+    import json
+
+    url = "https://api.openai.com/v1/moderations"
+
+    payload = json.dumps({
+        "input": "I want to kill you"
+    })
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer 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'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    print(response.text)
+
 if __name__ == '__main__':
-    test_chatgpt_response()
+    test_moderations()
+    # test_chatgpt_response()
