@@ -6,7 +6,9 @@
 @Email: xinbao.sun@hotmail.com
 """
 import copy
+import json
 import requests
+
 
 
 def query_ner(content, type_='XBS'):
@@ -110,5 +112,20 @@ def encoding_detect(inp):
         encoding = res.get('encoding')
         return encoding
 
+def test_chatgpt_response():
+    import openai
+    base_url = "https://api.openai-asia.com/v1"
+    key = "sk-7EfWwMczVQIsGk31ybj9dcQCPbJ7Zco52y8TU91eGZHSKOoW#" #del last one
+    openai.api_base = base_url
+    openai.api_key = key
+    rsp = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content":"请介绍一下你自己"}
+        ]
+    )
+    rsp = json.dumps(rsp, ensure_ascii=False)
+    print(rsp)
+
 if __name__ == '__main__':
-    pass
+    test_chatgpt_response()
