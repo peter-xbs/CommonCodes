@@ -55,7 +55,7 @@ def query_sym_norm(text):
 
 def google_translation(queries, dest="zh-CN"):
     """
-    注意:  pip install googletrans==3.1.0a0
+    注意:  pip install googletrans==3.1.0a0 deprececated
     REF: https://py-googletrans.readthedocs.io/en/latest/
     调用Google翻译 API
     :param query:
@@ -65,11 +65,19 @@ def google_translation(queries, dest="zh-CN"):
     from googletrans import Translator
     trans = Translator()
     dic = {}
-    res = trans.translate(queries, dest=dest)
+    res = trans.translate(queries, src='en', dest=dest)
     for trans_res in res:
         k, v = trans_res.origin, trans_res.text
         dic[k] = v
     return dic
+
+def google_translation2(query, src='en', dest='zh-CN'):
+    from json import loads
+    from requests import get
+    client = 'client=gtx&dt=t&sl={}&tl={}&q={}'.format(src, dest, query)
+    request_result = get("https://translate.googleapis.com/translate_a/single?{}".format(client))
+    translated_text = loads(request_result.text)[0][0][0]
+    return translated_text
 
 def download_huggingface_dataset(dataset_name, private=False):
     """
@@ -146,5 +154,7 @@ def test_moderations():
     print(response.text)
 
 if __name__ == '__main__':
-    test_moderations()
+    dic = google_translation2('hello world')
+    print(dic)
+    # test_moderations()
     # test_chatgpt_response()
