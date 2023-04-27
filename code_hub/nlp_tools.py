@@ -7,6 +7,8 @@
 """
 import copy
 import json
+import time
+
 import requests
 
 
@@ -115,7 +117,7 @@ def encoding_detect(inp):
 def test_chatgpt_response():
     import openai
     base_url = "https://api.openai-asia.com/v1"
-    key = "sk-7EfWwMczVQIsGk31ybj9dcQCPbJ7Zco52y8TU91eGZHSKOoW#" #del last one
+    key = "sk-7EfWwMczVQIsGk31ybj9dcQCPbJ7Zco52y8TU91eGZHSKOoW" #del last one
     openai.api_base = base_url
     openai.api_key = key
     rsp = openai.ChatCompletion.create(
@@ -127,5 +129,57 @@ def test_chatgpt_response():
     rsp = json.dumps(rsp, ensure_ascii=False)
     print(rsp)
 
+def hallucination_detect(message):
+    import openai
+    base_url = "https://api.openai-asia.com/v1"
+    key = "sk-7EfWwMczVQIsGk31ybj9dcQCPbJ7Zco52y8TU91eGZHSKOoW"  # del last one
+    openai.api_base = base_url
+    openai.api_key = key
+    rsp = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=message
+    )
+    return json.dumps(rsp, ensure_ascii=False)
+
+def batch_hallucination_detect():
+    import pandas as pd
+    df = pd.read_csv('../data_temp/幻觉测试100条.csv')
+    lines = []
+    df2 = pd.read_csv('../data_temp/test.csv')
+    fin_set = set(df2['instruction'])
+    for line in df.itertuples():
+        _, *args = line
+        instruction, output = getattr(line, 'instruction'), getattr(line, 'output')
+        if instruction in fin_set:
+            continue
+
+        task = "列举上述回答中不符合事实或者hallucination的部分："
+        round1 = {
+            "role": "user",
+            "content": instruction
+        }
+        round2 = {
+            "role": "system",
+            "content": output
+        }
+        round3 = {
+            "role": "user",
+            "content": task
+        }
+        msg = [round1, round2, round3]
+        try:
+            rsp = hallucination_detect(msg)
+        except:
+            continue
+        rsp = json.loads(rsp)
+        print(rsp)
+        args.append(rsp)
+        lines.append(args)
+        time.sleep(0.05)
+    new_df = pd.DataFrame(lines, columns=list(df.columns) + ['rsp'])
+    new_df.to_csv('../data_temp/test2.csv', index=False)
 if __name__ == '__main__':
-    test_chatgpt_response()
+    # test_chatgpt_response()
+    pass
+
+
