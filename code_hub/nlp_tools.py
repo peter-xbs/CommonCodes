@@ -10,6 +10,7 @@ import json
 import time
 
 import requests
+from spider import SpiderConfig
 
 
 
@@ -57,7 +58,7 @@ def query_sym_norm(text):
 
 def google_translation(queries, dest="zh-CN"):
     """
-    注意:  pip install googletrans==3.1.0a0
+    注意:  pip install googletrans==3.1.0a0 deprececated
     REF: https://py-googletrans.readthedocs.io/en/latest/
     调用Google翻译 API
     :param query:
@@ -67,11 +68,21 @@ def google_translation(queries, dest="zh-CN"):
     from googletrans import Translator
     trans = Translator()
     dic = {}
-    res = trans.translate(queries, dest=dest)
+    res = trans.translate(queries, src='en', dest=dest)
     for trans_res in res:
         k, v = trans_res.origin, trans_res.text
         dic[k] = v
     return dic
+
+def google_translation2(query, src='en', dest='zh-CN'):
+    client = 'client=gtx&dt=t&sl={}&tl={}&q={}'.format(src, dest, query)
+    url = "https://translate.googleapis.com/translate_a/single?{}".format(client)
+    print(url)
+    header = SpiderConfig.get_header()
+
+    request_result = requests.get(url, headers=header)
+    translated_text = json.loads(request_result.text)[0][0][0]
+    return translated_text
 
 def download_huggingface_dataset(dataset_name, private=False):
     """
@@ -129,6 +140,31 @@ def test_chatgpt_response():
     rsp = json.dumps(rsp, ensure_ascii=False)
     print(rsp)
 
+def chatgpt_api(prompt):
+    import openai
+    import traceback
+    base_url = "https://api.openai-asia.com/v1"
+    key = "sk-7EfWwMczVQIsGk31ybj9dcQCPbJ7Zco52y8TU91eGZHSKOoW" #del last one
+    openai.api_base = base_url
+    openai.api_key = key
+    rsp = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    try:
+        res = rsp['choices'][0]['message']['content']
+        if not isinstance(res, str):
+            return None
+        return res
+    except Exception as e:
+        err = traceback.format_exc()
+        print(err)
+    return None
+
+
+
 def hallucination_detect(message):
     import openai
     base_url = "https://api.openai-asia.com/v1"
@@ -179,7 +215,15 @@ def batch_hallucination_detect():
     new_df = pd.DataFrame(lines, columns=list(df.columns) + ['rsp'])
     new_df.to_csv('../data_temp/test2.csv', index=False)
 if __name__ == '__main__':
+
+    # dic = google_translation2('hello world')
+    # print(dic)
+    # test_moderations()
     # test_chatgpt_response()
-    pass
+    # test_moderations()
+    r = chatgpt_api('素食主义者是愚蠢的')
+
+
+
 
 
