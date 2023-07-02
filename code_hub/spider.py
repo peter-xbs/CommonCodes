@@ -251,5 +251,122 @@ class LoincSpider(SpiderBase1):
             return str(elem.text)
         return ''
 
+class Kaoyan(SpiderBase1):
+    def __init__(self):
+        super().__init__()
+    def _proc_one(self, url):
+        self.driver.get(url)
+        res = self.driver.find_elements(By.XPATH, '/html/body/div/div/div/div/div/div/button')
+        all_htmls = []
+        for item in res[:10]:
+            item.click()
+            time.sleep(0.5)
+            id_ = item.get_attribute('id')
+            id2 = id_.replace('questionbtn', 'questionall')
+            iframe = self.driver.find_element(By.ID, id2)
+            self.driver.switch_to.frame(iframe)
+            html = self.driver.page_source
+            all_htmls.append(html)
+            self.driver.switch_to.default_content()
+            time.sleep(0.1)
+        return all_htmls
+
+    def process(self):
+        with open('../data_temp/考研.jsonl') as f, open('../data_temp/kaoyan_supp.jsonl', 'a') as fo:
+            idx= 0
+            for line in f.readlines():
+                idx += 1
+
+                if idx <= 1295:
+                    continue
+                print(idx)
+                js = json.loads(line)
+                url = js['type_url']
+                url = url.replace('??', '?')
+                js['type_url'] = url
+
+                try:
+                    htmls = self._proc_one(url)
+                    status = 'ok'
+                except:
+                    htmls = []
+                    status = 'failed'
+                js['htmls'] = htmls
+                js['status'] = status
+                time.sleep(0.2)
+                line_ = json.dumps(js, ensure_ascii=False)+'\n'
+                fo.write(line_)
+
+        self.terminate_driver()
+
+class YMT(SpiderBase1):
+    def __init__(self):
+        super().__init__()
+
+    def _proc_one(self, url):
+        self.driver.get(url)
+        t = 0
+        all_elems = []
+        while t < 70:
+            self.driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+            time.sleep(1)
+            elems = self.driver.find_elements(By.XPATH, '//*[@class="title"]/a')
+            print('ok')
+            for e in elems:
+                # e = elem.find_element(By.XPATH, '//*[@class="title"]/a')  # //*[@id="more"]/div[540]
+                text, href = e.text, e.get_attribute('href')
+                all_elems.append([text, href])
+            t += 1
+        return all_elems
+
+    def process(self, url_dict):
+        with open('../data_temp/医脉通guideline.jsonl', 'w') as fo:
+            for topic in url_dict:
+                url = url_dict[topic]
+                all_elems = self._proc_one(url)
+                cur = {'topic': topic, 'url': url, 'elems': all_elems}
+                line = json.dumps(cur, ensure_ascii=False) + '\n'
+                fo.write(line)
+
+        self.terminate_driver()
+
+class DXY(SpiderBase1):
+    def __init__(self):
+        super().__init__()
+
+    def _proc_one(self, url):
+        print(url)
+        self.driver.get(url)
+
+        all_res = []
+        elems = self.driver.find_elements(By.XPATH, '//*[@id="main"]/div/div/div[1]/dl/dd/p[1]/a')
+        res = [[elem.get_attribute('href'), elem.text] for elem in elems]
+        all_res.extend(res)
+        nxt_page_bt = self.driver.find_elements(By.XPATH, '//*[@title="下一页"]')
+        print('ok', nxt_page_bt)
+        while nxt_page_bt:
+            href = nxt_page_bt[0].get_attribute('href')
+            self.driver.get(href)
+            time.sleep(1)
+            self.driver.execute_script("window.scrollTo(0,document.body.scrollHeight)")
+            time.sleep(3)
+            elems = self.driver.find_elements(By.XPATH, '//*[@id="main"]/div/div/div[1]/dl/dd/p[1]/a')
+            res = [[elem.get_attribute('href'), elem.text] for elem in elems]
+            time.sleep(random.choice(list(range(3))))
+            nxt_page_bt = self.driver.find_elements(By.XPATH, '//*[@title="下一页"]')
+            all_res.extend(res)
+        return all_res
+
+    def process(self, url_dict):
+        with open('../data_temp/丁香园guideline.jsonl', 'w') as fo:
+            for topic in url_dict:
+                url = url_dict[topic]
+                all_elems = self._proc_one(url)
+                cur = {'topic': topic, 'url': url, 'elems': all_elems}
+                line = json.dumps(cur, ensure_ascii=False) + '\n'
+                fo.write(line)
+
+        self.terminate_driver()
+
 if __name__ == '__main__':
     pass
